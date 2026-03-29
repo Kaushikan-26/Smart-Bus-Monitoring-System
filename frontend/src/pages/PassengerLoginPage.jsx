@@ -22,7 +22,7 @@ export default function PassengerLoginPage() {
     setLoading(true);
     try {
       await api.post('/auth/send-otp', { mobile });
-      toast.success('OTP sent! Check the backend console during development.');
+      toast.success('OTP sent!');
       setStep(2);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send OTP');

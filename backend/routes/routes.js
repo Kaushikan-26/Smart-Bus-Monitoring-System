@@ -7,7 +7,22 @@ const router = express.Router();
 // GET /api/routes  (public)
 router.get('/', async (req, res) => {
   try {
-    const routes = await BusRoute.find({ isActive: true }).populate('stops').sort({ routeNumber: 1 });
+    const { stopId } = req.query;
+    let query = { isActive: true };
+    
+    // We fetch and populate first to easily check start/end stops
+    const routes = await BusRoute.find(query).populate('stops').sort({ routeNumber: 1 });
+    
+    if (stopId) {
+      const filtered = routes.filter(route => {
+        if (!route.stops || route.stops.length === 0) return false;
+        const firstStopId = route.stops[0]._id.toString();
+        const lastStopId = route.stops[route.stops.length - 1]._id.toString();
+        return firstStopId === stopId || lastStopId === stopId;
+      });
+      return res.json(filtered);
+    }
+
     res.json(routes);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });

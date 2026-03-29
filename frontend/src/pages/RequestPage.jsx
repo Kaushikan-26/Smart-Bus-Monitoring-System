@@ -30,15 +30,40 @@ export default function RequestPage() {
     loadData();
   }, [user]);
 
+  // Handle route filtering when selected stop changes
+  useEffect(() => {
+    fetchFilteredRoutes();
+  }, [selectedStop]);
+
   const loadData = async () => {
     try {
-      const [stopsRes, routesRes] = await Promise.all([api.get('/stops'), api.get('/routes')]);
+      const [stopsRes, routesRes] = await Promise.all([
+        api.get('/stops'), 
+        api.get('/routes')
+      ]);
       setStops(stopsRes.data);
       setRoutes(routesRes.data);
     } catch {
       toast.error('Failed to load stops/routes');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFilteredRoutes = async () => {
+    try {
+      const url = selectedStop ? `/routes?stopId=${selectedStop}` : '/routes';
+      const res = await api.get(url);
+      setRoutes(res.data);
+      // Automatically select the first route if there's only one
+      if (res.data.length === 1) {
+        setSelectedRoute(res.data[0]._id);
+      } else if (!res.data.find(r => r._id === selectedRoute)) {
+        // Clear route selection if the previously selected route is no longer in the list
+        setSelectedRoute('');
+      }
+    } catch {
+      toast.error('Failed to update routes');
     }
   };
 
